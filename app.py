@@ -126,6 +126,7 @@ def display_new_article_text(new_articles, new_law_text):
             st.warning(f"Tekst voor artikel {article} niet gevonden in het nieuwe wetboek")
 
 # Initialisatie van de applicatie
+st.set_page_config(layout="wide")  # Gebruik de volledige breedte
 st.title("Transponeringstabel nieuw Wetboek van Strafvordering")
 
 # Inladen van de benodigde gegevens
@@ -187,20 +188,48 @@ if artikel:
                 st.write("Nieuw artikel:")
                 st.table(resultaten['Nieuw Wetboek van Strafvordering'])
                 
-                # Tekst van de nieuwe artikelen tonen
-                st.write("---")
-                st.write("**Tekst nieuwe artikelen:**")
-                new_articles_ref = resultaten['Nieuw Wetboek van Strafvordering'].iloc[0]
-                display_new_article_text(new_articles_ref, new_law_text)
+                # Twee kolommen voor oude en nieuwe tekst
+                col1, col2 = st.columns(2)
                 
-                # Huidige wettekst tonen
-                st.write("---")
-                st.write("**Huidige wettekst:**")
-                wettekst = extract_article_text(st.session_state['xml_content'], artikel)
-                st.markdown(wettekst)
+                with col1:
+                    st.write("**Huidige wettekst:**")
+                    wettekst = extract_article_text(st.session_state['xml_content'], artikel)
+                    st.markdown(wettekst)
+                
+                with col2:
+                    st.write("**Tekst nieuwe artikelen:**")
+                    new_articles_ref = resultaten['Nieuw Wetboek van Strafvordering'].iloc[0]
+                    display_new_article_text(new_articles_ref, new_law_text)
             else:
                 st.warning("Geen resultaten gevonden voor huidige zoekopdracht (de combinatie van Artikel/Lid/Sub/Graad bestaat niet)")
     else:
         st.warning(f"Geen resultaten gevonden voor artikel {artikel}")
 else:
     st.error("Vul het artikelnummer in. Dit veld is verplicht.")
+
+# Footer met bronvermeldingen
+st.markdown("---")
+st.markdown("### Bronvermeldingen")
+
+# Twee kolommen voor de bronvermeldingen
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown("""
+    **Wetboek van Strafvordering**  
+    Geraadpleegd op 09-12-2024  
+    Gebruikte datum 'geldig op' 01-10-2024 en zichtdatum 01-10-2024  
+    Geldend van 01-10-2024 t/m heden  
+    Meerdere toekomstige wijzigingen; eerste op 01-10-2025  
+    Wijziging(en) op nader te bepalen datum(s); laatste bekendgemaakt in 2022
+    """)
+
+with col2:
+    st.markdown("""
+    **Bronnen:**
+    - [Transponeringstabel nieuw Wetboek van Strafvordering](https://www.strafrechtketen.nl/documenten/kamerstukken/2023/03/21/transponeringstabel-nieuw-wetboek-van-strafvordering-oud-naar-nieuw)
+    - [Nieuwe wetteksten (PDF)](https://www.rijksoverheid.nl/binaries/rijksoverheid/documenten/publicaties/2020/12/11/ambtelijke-versie-juli-2020-wetsvoorstel-wetboek-van-strafvordering-boek-1/Vaststelling+van+het+nieuwe+Wetboek+van+Strafvordering+Boek+1.pdf)
+    """)
+
+# Voeg wat padding toe aan de onderkant
+st.markdown("<br><br>", unsafe_allow_html=True)
