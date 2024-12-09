@@ -6,51 +6,37 @@ from io import StringIO
 
 @st.cache_data
 def load_data(file_path):
+    """
+    Laadt de transponeringstabel vanuit een CSV bestand.
+    """
     return pd.read_csv(file_path, delimiter=';', encoding='ISO-8859-1')
 
 @st.cache_data
 def load_new_law_text(file_path):
     """
-    Load the new law text from Excel file with additional error checking
+    Laadt de teksten van het nieuwe wetboek vanuit een Excel bestand.
+    Maakt een woordenboek van artikelnummers naar wetteksten voor snelle opzoekacties.
     """
-    try:
-        # Add debug output
-        st.write(f"Attempting to load Excel file: {file_path}")
-        
-        df = pd.read_excel(file_path)
-        
-        # Debug output to see the structure
-        st.write("Excel file structure:")
-        st.write(df.head())
-        
-        # Convert to dictionary for faster lookups
-        # Clean up article numbers by removing 'Artikel ' prefix and any whitespace
-        article_dict = dict(zip(
-            df['Artikelnummer'].str.replace('Artikel ', '').str.strip(),
-            df.iloc[:, 1]
-        ))
-        
-        # Debug output for the dictionary
-        st.write("First few entries in the article dictionary:")
-        first_few = dict(list(article_dict.items())[:3])
-        st.write(first_few)
-        
-        return article_dict
-        
-    except FileNotFoundError:
-        st.error(f"Excel bestand niet gevonden: {file_path}")
-        return {}
-    except Exception as e:
-        st.error(f"Fout bij laden van Excel bestand: {str(e)}")
-        return {}
+    df = pd.read_excel(file_path)
+    return dict(zip(
+        df['Artikelnummer'].str.replace('Artikel ', '').str.strip(),
+        df.iloc[:, 1]
+    ))
 
 @st.cache_data
 def fetch_and_parse_xml(url):
+    """
+    Haalt de XML van het huidige wetboek op van de overheidswebsite.
+    """
     response = requests.get(url)
     response.raise_for_status()
     return response.text
 
 def extract_article_text(xml_content, article_number):
+    """
+    Extraheert de tekst van een specifiek artikel uit de XML van het huidige wetboek.
+    Verwerkt alle onderdelen zoals leden, lijsten en externe verwijzingen.
+    """
     tree = ET.parse(StringIO(xml_content))
     root = tree.getroot()
     
@@ -97,6 +83,10 @@ def extract_article_text(xml_content, article_number):
     return f"Artikel {article_number} niet gevonden."
 
 def get_available_values(data, artikel, position):
+    """
+    Bepaalt welke waarden beschikbaar zijn voor een bepaalde positie in de artikelstructuur.
+    Wordt gebruikt voor het vullen van de selectievakjes voor lid, sub en graad.
+    """
     filtered_data = data[data['Key'].str.startswith(f"{artikel}-")]
     
     if filtered_data.empty:
@@ -109,34 +99,23 @@ def get_available_values(data, artikel, position):
 
 def extract_article_numbers(reference_string):
     """
-    Extract the main article numbers from reference strings
+    Haalt de hoofdartikelnummers uit een reeks verwijzingen.
+    Bijvoorbeeld: uit '1.2.9, 1, a' wordt '1.2.9' geëxtraheerd.
     """
-    # Split on semicolon for multiple references
     references = reference_string.split(';')
-    
-    # Extract main article numbers
     article_numbers = []
     for ref in references:
-        # Split by comma and take the first part
         main_article = ref.split(',')[0].strip()
         if main_article:
             article_numbers.append(main_article)
-    
     return article_numbers
 
 def display_new_article_text(new_articles, new_law_text):
     """
-    Display the text of new articles, handling multiple article references
+    Toont de tekst van de nieuwe artikelen.
+    Verwerkt zowel enkele als meerdere artikelverwijzingen.
     """
-    # Debug output
-    st.write("Processing article references:", new_articles)
-    
-    # Get main article numbers
     articles = extract_article_numbers(new_articles)
-    st.write("Extracted article numbers:", articles)
-    
-    # Debug output for new_law_text
-    st.write("Available articles in new law text:", list(new_law_text.keys())[:5])
     
     for article in articles:
         if article in new_law_text:
@@ -145,28 +124,22 @@ def display_new_article_text(new_articles, new_law_text):
             st.write("---")
         else:
             st.warning(f"Tekst voor artikel {article} niet gevonden in het nieuwe wetboek")
-            st.write(f"Gezocht artikel: '{article}'")
 
-# App opstarten
+# Initialisatie van de applicatie
 st.title("Transponeringstabel nieuw Wetboek van Strafvordering")
 
-# Data inladen
+# Inladen van de benodigde gegevens
 data_path = "data.csv"
 new_law_path = "Wetboek_Strafvordering_Geformatteerd.xlsx"
 
 try:
     data = load_data(data_path)
-except Exception as e:
-    st.error(f"Fout bij laden van data.csv: {str(e)}")
-    st.stop()
-
-try:
     new_law_text = load_new_law_text(new_law_path)
 except Exception as e:
-    st.error(f"Fout bij laden van Excel bestand: {str(e)}")
+    st.error(f"Fout bij het laden van de gegevens: {str(e)}")
     st.stop()
 
-# XML ophalen bij het starten van de app
+# XML van het huidige wetboek ophalen
 url = "https://repository.officiele-overheidspublicaties.nl/bwb/BWBR0001903/2024-10-01_0/xml/BWBR0001903_2024-10-01_0.xml"
 try:
     xml_content = fetch_and_parse_xml(url)
@@ -175,7 +148,7 @@ except Exception as e:
     st.error(f"Fout bij het laden van de XML: {str(e)}")
     st.stop()
 
-# Input velden
+# Zoekinterface
 st.subheader("Zoek naar een waarde met de key")
 
 artikel = st.text_input("Artikel (verplicht)", "").strip()
@@ -186,6 +159,7 @@ if artikel:
     if matching_keys.any():
         lid = sub = graad = ""
         
+        # Dynamische selectievakjes voor lid, sub en graad
         lid_values = get_available_values(data, artikel, 1)
         if lid_values:
             lid = st.selectbox("Lid (optioneel)", options=[''] + lid_values).strip()
@@ -204,6 +178,7 @@ if artikel:
             if graad_values:
                 graad = st.selectbox("Graad (optioneel)", options=[''] + graad_values).strip()
 
+        # Zoekactie uitvoeren
         key = f"{artikel}-{lid if lid else '0'}-{sub if sub else '0'}-{graad if graad else '0'}"
         
         if st.button("Zoek"):
@@ -212,14 +187,13 @@ if artikel:
                 st.write("Nieuw artikel:")
                 st.table(resultaten['Nieuw Wetboek van Strafvordering'])
                 
-                # Display the text of the new articles with more debug info
+                # Tekst van de nieuwe artikelen tonen
                 st.write("---")
                 st.write("**Tekst nieuwe artikelen:**")
                 new_articles_ref = resultaten['Nieuw Wetboek van Strafvordering'].iloc[0]
-                st.write("Gevonden verwijzingen:", new_articles_ref)
                 display_new_article_text(new_articles_ref, new_law_text)
                 
-                # Display current law text
+                # Huidige wettekst tonen
                 st.write("---")
                 st.write("**Huidige wettekst:**")
                 wettekst = extract_article_text(st.session_state['xml_content'], artikel)
