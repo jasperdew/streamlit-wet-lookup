@@ -11,7 +11,7 @@ data_path = "data.csv"  # Naam van je CSV-bestand
 data = load_data(data_path)
 
 # Titel
-st.title("Key Lookup Tool")
+st.title("Transponeringstabel nieuw Wetboek van Strafvordering")
 
 # Inputvelden
 st.subheader("Zoek naar een waarde met de key")
