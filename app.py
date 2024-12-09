@@ -27,13 +27,14 @@ def extract_article_text(xml_content, article_number):
     for artikel in root.iter('artikel'):
         nr_element = artikel.find('./kop/nr')
         if nr_element is not None and nr_element.text.strip() == article_number:
-            output_lines = [f"Artikel {article_number} \n"]  # Added extra space here
+            # Begin met artikel nummer op eigen regel
+            output_lines = [f"Artikel {article_number}", ""]  # Empty string creates a newline
             
             for lid in artikel.iter('lid'):
                 # kijk of er een nummer bij het lid staat
                 lidnr_el = lid.find('lidnr')
                 if lidnr_el is not None and lidnr_el.text:
-                    output_lines.append(f"\n{lidnr_el.text.strip()}. ")
+                    output_lines.append(f"{lidnr_el.text.strip()}. ")
                 
                 # loop door alle tekst elementen in het lid
                 for element in lid.iter():
@@ -71,9 +72,9 @@ def extract_article_text(xml_content, article_number):
                 output_lines.append("")  # extra ruimte tussen de leden
             
             # plak alles aan elkaar met de juiste spaties
-            return "\n".join(line.strip() for line in output_lines if line.strip())
+            return "\n".join(line.strip() for line in output_lines if line is not None)
     
-    return f"Artikel {article_number} niet gevonden."  # Added extra space here too for consistency
+    return f"Artikel {article_number} niet gevonden."
 
 def get_available_values(data, artikel, position):
     # kijken welke waardes er beschikbaar zijn voor de dropdown
