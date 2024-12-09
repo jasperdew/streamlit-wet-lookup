@@ -21,7 +21,7 @@ def extract_article_text(xml_content, article_number):
     for artikel in root.iter('artikel'):
         nr_element = artikel.find('./kop/nr')
         if nr_element is not None and nr_element.text.strip() == article_number:
-            output_lines = [f"Artikel {article_number}\n"]  # Added extra newline here
+            output_lines = [f"Artikel {article_number}\n"]
             
             for lid in artikel.iter('lid'):
                 lidnr_el = lid.find('lidnr')
@@ -47,12 +47,27 @@ def extract_article_text(xml_content, article_number):
     
     return f"Artikel {article_number} niet gevonden."
 
+def get_available_values(data, column, filters=None):
+    if filters:
+        for key, value in filters.items():
+            if value:
+                data = data[data[key] == value]
+    
+    # Split the 'Key' column and get unique values for the specified position
+    values = data['Key'].str.split('-').str[column].unique()
+    # Remove '0' values and sort
+    values = sorted([v for v in values if v != '0'])
+    return [''] + values if values is not None else ['']
+
 # App initialization
 st.title("Transponeringstabel nieuw Wetboek van Strafvordering")
 
 # Load data
 data_path = "data.csv"
 data = load_data(data_path)
+
+# Extract artikel numbers from the Key column
+artikel_options = sorted(list(set(data['Key'].str.split('-').str[0].unique())))
 
 # Load XML content once at startup
 url = "https://repository.officiele-overheidspublicaties.nl/bwb/BWBR0001903/2002-03-08_0/xml/BWBR0001903_2002-03-08_0.xml"
@@ -63,14 +78,28 @@ except Exception as e:
     st.error(f"Fout bij het laden van de XML: {str(e)}")
     st.stop()
 
-# Input fields
+# Input fields with dynamic dropdowns
 st.subheader("Zoek naar een waarde met de key")
-artikel = st.text_input("Artikel (verplicht)", "").strip()
-lit = st.text_input("Lit (optioneel)", "").strip()
-sub = st.text_input("Sub (optioneel)", "").strip()
-graad = st.text_input("Graad (optioneel)", "").strip()
+
+# Artikel dropdown
+artikel = st.selectbox("Artikel (verplicht)", options=[''] + artikel_options).strip()
 
 if artikel:
+    # Get available lit values based on selected artikel
+    lit_options = get_available_values(data, 1, {'Key': lambda x: x.startswith(f"{artikel}-")})
+    lit = st.selectbox("Lit", options=lit_options).strip()
+    
+    # Get available sub values based on selected artikel and lit
+    filters = {'Key': lambda x: x.startswith(f"{artikel}-{lit if lit else '0'}-")}
+    sub_options = get_available_values(data, 2, filters)
+    sub = st.selectbox("Sub", options=sub_options).strip()
+    
+    # Get available graad values based on selected artikel, lit, and sub
+    filters = {'Key': lambda x: x.startswith(f"{artikel}-{lit if lit else '0'}-{sub if sub else '0'}-")}
+    graad_options = get_available_values(data, 3, filters)
+    graad = st.selectbox("Graad", options=graad_options).strip()
+
+    # Create key and search
     key = f"{artikel}-{lit if lit else '0'}-{sub if sub else '0'}-{graad if graad else '0'}"
     
     if st.button("Zoek"):
@@ -80,7 +109,7 @@ if artikel:
             st.write("Nieuw artikel:")
             st.table(resultaten['Nieuw Wetboek van Strafvordering'])
             
-            # Toon de originele wettekst
+            # Toon de huidige wettekst
             st.write("---")
             st.write("**Huidige wettekst:**")
             wettekst = extract_article_text(st.session_state['xml_content'], artikel)
