@@ -4,7 +4,14 @@ import xml.etree.ElementTree as ET
 import requests
 from io import StringIO
 
-# Force light theme and override dark mode
+# Deze MOET als eerste Streamlit commando komen
+st.set_page_config(
+    page_title="Wetboek van Strafvordering Transponeringstabel",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# Daarna pas de styling
 st.markdown("""
     <style>
         /* Force light theme */
@@ -84,13 +91,6 @@ st.markdown("""
         }
     </style>
 """, unsafe_allow_html=True)
-
-# Configure page
-st.set_page_config(
-    page_title="Wetboek van Strafvordering Transponeringstabel",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
 
 @st.cache_data
 def load_data(file_path):
