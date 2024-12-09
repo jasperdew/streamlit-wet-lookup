@@ -74,7 +74,7 @@ data_path = "data.csv"
 data = load_data(data_path)
 
 # XML ophalen als de app start
-url = "https://repository.officiele-overheidspublicaties.nl/bwb/BWBR0001903/2002-03-08_0/xml/BWBR0001903_2002-03-08_0.xml"
+url = "https://repository.officiele-overheidspublicaties.nl/bwb/BWBR0001903/2024-10-01_0/xml/BWBR0001903_2024-10-01_0.xml"
 try:
     xml_content = fetch_and_parse_xml(url)
     st.session_state['xml_content'] = xml_content
