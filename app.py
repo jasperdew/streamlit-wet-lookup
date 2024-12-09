@@ -4,64 +4,74 @@ import xml.etree.ElementTree as ET
 import requests
 from io import StringIO
 
-# Custom CSS styling
+# Force light theme and override dark mode
 st.markdown("""
     <style>
-        /* Algemene app styling */
-        .stApp {
-            background-color: #f8f9fa;
+        /* Force light theme */
+        [data-testid="stAppViewContainer"] {
+            background-color: #ffffff !important;
         }
         
-        /* Container styling */
-        .block-container {
-            padding: 2rem;
-            max-width: 1200px;
+        [data-testid="stHeader"] {
+            background-color: #ffffff !important;
         }
         
-        /* Input velden */
+        [data-testid="stToolbar"] {
+            background-color: #ffffff !important;
+        }
+        
+        [data-testid="stSidebar"] {
+            background-color: #ffffff !important;
+        }
+        
+        /* Text colors for dark mode compatibility */
+        .stMarkdown, p, h1, h2, h3 {
+            color: #31333F !important;
+        }
+        
+        /* Input styling */
         .stTextInput > div > div > input {
-            background-color: white;
+            background-color: #ffffff;
+            color: #31333F;
             border: 1px solid #ddd;
-            padding: 0.5rem;
-            border-radius: 4px;
         }
         
-        /* Zoek knop */
+        /* Button styling */
         .stButton > button {
-            width: 200px;
             background-color: #1f77b4;
             color: white;
             border: none;
-            padding: 0.5rem 1rem;
+            padding: 0.5rem 2rem;
             border-radius: 4px;
-            margin: 1rem 0;
+            font-weight: 500;
         }
+        
         .stButton > button:hover {
             background-color: #145c8e;
         }
         
-        /* Tabel styling */
-        .dataframe {
-            background-color: white;
-            border-radius: 4px;
-            padding: 1rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        /* Table styling */
+        [data-testid="stTable"] {
+            background-color: #ffffff;
+            color: #31333F;
         }
         
-        /* Wettekst container */
+        /* Container styling */
         .law-text {
-            background-color: white;
+            background-color: #ffffff;
+            color: #31333F;
             padding: 1.5rem;
             border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #ddd;
             margin: 1rem 0;
             line-height: 1.6;
         }
         
-        /* Headers */
-        h1, h2, h3 {
-            color: #1f77b4;
-            margin-bottom: 1rem;
+        /* Warning and error messages */
+        .stAlert {
+            background-color: #ffffff;
+            color: #31333F;
+            border: 1px solid #ddd;
         }
         
         /* Footer */
@@ -72,15 +82,15 @@ st.markdown("""
             margin-top: 2rem;
             border-top: 1px solid #ddd;
         }
-        
-        /* Warning en error berichten */
-        .stAlert {
-            background-color: white;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
     </style>
 """, unsafe_allow_html=True)
+
+# Configure page
+st.set_page_config(
+    page_title="Wetboek van Strafvordering Transponeringstabel",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
 @st.cache_data
 def load_data(file_path):
@@ -125,7 +135,9 @@ def extract_article_text(xml_content, article_number):
     
     return f"Artikel {article_number} niet gevonden."
 
-# App initialization
+# App content with padding
+st.markdown('<div style="padding: 1rem;">', unsafe_allow_html=True)
+
 st.title("Transponeringstabel nieuw Wetboek van Strafvordering")
 
 # Load data
@@ -141,11 +153,9 @@ except Exception as e:
     st.error(f"Fout bij het laden van de XML: {str(e)}")
     st.stop()
 
-# Input fields in columns with padding
+# Input fields with better spacing
 st.markdown("### Zoek naar een waarde met de key")
-
-# Voeg wat ruimte toe voor de kolommen
-st.markdown("<div style='padding: 1rem 0;'></div>", unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
 
@@ -157,8 +167,8 @@ with col2:
     lit = st.text_input("Lit (optioneel)", "").strip()
     graad = st.text_input("Graad (optioneel)", "").strip()
 
-# Centreer de zoekknop
-st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+# Center the search button
+st.markdown("<div style='text-align: center; padding: 1rem 0;'>", unsafe_allow_html=True)
 
 if artikel:
     key = f"{artikel}-{lit if lit else '0'}-{sub if sub else '0'}-{graad if graad else '0'}"
@@ -166,9 +176,11 @@ if artikel:
     if st.button("Zoek", key="search_button"):
         resultaten = data[data['Key'] == key]
         if not resultaten.empty:
+            st.markdown("<br>", unsafe_allow_html=True)
             st.markdown("### Nieuw artikel")
             st.table(resultaten['Nieuw Wetboek van Strafvordering'])
             
+            st.markdown("<br>", unsafe_allow_html=True)
             st.markdown("### Originele wettekst")
             wettekst = extract_article_text(st.session_state['xml_content'], artikel)
             st.markdown(f"""
@@ -189,3 +201,5 @@ st.markdown("""
         © 2024 Wetboek van Strafvordering Transponeringstabel
     </div>
 """, unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
