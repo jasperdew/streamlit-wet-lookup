@@ -95,7 +95,7 @@ if artikel:
         # Get available lit values
         lit_values = get_available_values(data, artikel, 1)
         if lit_values:
-            lit = st.selectbox("Lit (optioneel)", options=[''] + lit_values).strip()
+            lit = st.selectbox("Lid (optioneel)", options=[''] + lit_values).strip()
         
         # Get available sub values only if we have a lit value or lit values don't exist
         if lit or not lit_values:
