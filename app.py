@@ -17,7 +17,10 @@ def fetch_and_parse_xml(url):
     return response.text
 
 def extract_article_text(xml_content, article_number):
-    # pakt de tekst uit de xml voor n artikel
+    """
+    Extracts and formats the complete text from an XML article, including all sub-elements
+    and proper handling of external references.
+    """
     tree = ET.parse(StringIO(xml_content))
     root = tree.getroot()
     
@@ -27,26 +30,48 @@ def extract_article_text(xml_content, article_number):
             output_lines = [f"Artikel {article_number}\n"]
             
             for lid in artikel.iter('lid'):
+                # Handle lid number
                 lidnr_el = lid.find('lidnr')
                 if lidnr_el is not None and lidnr_el.text:
-                    output_lines.append(f"{lidnr_el.text.strip()}. ")
+                    output_lines.append(f"\n{lidnr_el.text.strip()}. ")
                 
-                for al in lid.findall('al'):
-                    if al.text and al.text.strip():
-                        output_lines.append(al.text.strip())
+                # Process all text elements within the lid
+                for element in lid.iter():
+                    if element.tag == 'al':
+                        if element.text and element.text.strip():
+                            output_lines.append(element.text.strip())
+                    elif element.tag == 'extref':
+                        # Handle external references by including their text content
+                        if element.text:
+                            output_lines.append(element.text.strip())
+                        # Get any tail text that might follow the reference
+                        if element.tail and element.tail.strip():
+                            output_lines.append(element.tail.strip())
+                    
+                    # Handle any tail text for other elements
+                    elif element.tail and element.tail.strip():
+                        output_lines.append(element.tail.strip())
                 
+                # Handle lists within the lid
                 for lijst in lid.findall('lijst'):
                     for li in lijst.findall('li'):
                         li_nr_el = li.find('li.nr')
                         li_nr = li_nr_el.text.strip() if li_nr_el is not None else ''
-                        li_al_lines = [al_el.text.strip() for al_el in li.findall('al') 
-                                     if al_el.text and al_el.text.strip()]
                         
-                        if li_nr and li_al_lines:
-                            output_lines.append(f"{li_nr} {li_al_lines[0]}")
-                            output_lines.extend(li_al_lines[1:])
+                        # Collect all text content within the list item
+                        li_content = []
+                        for al_el in li.findall('al'):
+                            if al_el.text and al_el.text.strip():
+                                li_content.append(al_el.text.strip())
+                        
+                        if li_nr and li_content:
+                            output_lines.append(f"{li_nr} {li_content[0]}")
+                            output_lines.extend(li_content[1:])
+                
+                output_lines.append("")  # Add spacing between lids
             
-            return "\n".join(output_lines)
+            # Join all lines with proper spacing and remove extra whitespace
+            return "\n".join(line.strip() for line in output_lines if line.strip())
     
     return f"Artikel {article_number} niet gevonden."
 
