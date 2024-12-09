@@ -6,15 +6,18 @@ from io import StringIO
 
 @st.cache_data
 def load_data(file_path):
+    # laad de data uit t bestand
     return pd.read_csv(file_path, delimiter=';', encoding='ISO-8859-1')
 
 @st.cache_data
 def fetch_and_parse_xml(url):
+    # haalt de xml op en geeft m terug
     response = requests.get(url)
     response.raise_for_status()
     return response.text
 
 def extract_article_text(xml_content, article_number):
+    # pakt de tekst uit de xml voor n artikel
     tree = ET.parse(StringIO(xml_content))
     root = tree.getroot()
     
@@ -48,28 +51,29 @@ def extract_article_text(xml_content, article_number):
     return f"Artikel {article_number} niet gevonden."
 
 def get_available_values(data, artikel, position):
-    # Filter rows that start with the artikel
+    # ff kijken welke waardes dr zijn voor de dropdown
+    # filtert eerst de rows die met t artikel beginnen
     filtered_data = data[data['Key'].str.startswith(f"{artikel}-")]
     
     if filtered_data.empty:
         return []
     
-    # Split all matching keys and get the values at the specified position
+    # splitst de keys en pakt de waardes die we nodig hebben
     values = filtered_data['Key'].str.split('-').str[position].unique()
     
-    # Remove '0' values and sort
+    # gooi de nullen eruit en sorteer t ff netjes
     values = sorted([v for v in values if v != '0'])
     
     return values
 
-# App initialization
+# App opstarten
 st.title("Transponeringstabel nieuw Wetboek van Strafvordering")
 
-# Load data
+# Data inladen
 data_path = "data.csv"
 data = load_data(data_path)
 
-# Load XML content once at startup
+# XML ophalen als de app start
 url = "https://repository.officiele-overheidspublicaties.nl/bwb/BWBR0001903/2002-03-08_0/xml/BWBR0001903_2002-03-08_0.xml"
 try:
     xml_content = fetch_and_parse_xml(url)
@@ -78,52 +82,52 @@ except Exception as e:
     st.error(f"Fout bij het laden van de XML: {str(e)}")
     st.stop()
 
-# Input fields
+# Input velden
 st.subheader("Zoek naar een waarde met de key")
 
 # Artikel blijft een text input
 artikel = st.text_input("Artikel (verplicht)", "").strip()
 
 if artikel:
-    # Check if artikel exists in the data
+    # kijk of t artikel bestaat in de data
     matching_keys = data['Key'].str.startswith(f"{artikel}-")
     
     if matching_keys.any():
-        # Initialize variables
-        lit = sub = graad = ""
+        # eerst ff de variabelen klaarzetten
+        lid = sub = graad = ""
         
-        # Get available lit values
-        lit_values = get_available_values(data, artikel, 1)
-        if lit_values:
-            lit = st.selectbox("Lid (optioneel)", options=[''] + lit_values).strip()
+        # beschikbare lid waardes ophalen
+        lid_values = get_available_values(data, artikel, 1)
+        if lid_values:
+            lid = st.selectbox("Lid (optioneel)", options=[''] + lid_values).strip()
         
-        # Get available sub values only if we have a lit value or lit values don't exist
-        if lit or not lit_values:
-            sub_values = get_available_values(data[data['Key'].str.startswith(f"{artikel}-{lit if lit else '0'}-")], artikel, 2)
+        # sub waardes ophalen als er n lid is of als er geen lid waardes zijn
+        if lid or not lid_values:
+            sub_values = get_available_values(data[data['Key'].str.startswith(f"{artikel}-{lid if lid else '0'}-")], artikel, 2)
             if sub_values:
                 sub = st.selectbox("Sub (optioneel)", options=[''] + sub_values).strip()
         
-        # Get available graad values only if we have a sub value or sub values don't exist
-        if sub or not (lit_values or sub_values):
+        # graad waardes ophalen als er n sub is of als er geen sub/lid waardes zijn
+        if sub or not (lid_values or sub_values):
             graad_values = get_available_values(
-                data[data['Key'].str.startswith(f"{artikel}-{lit if lit else '0'}-{sub if sub else '0'}-")], 
+                data[data['Key'].str.startswith(f"{artikel}-{lid if lid else '0'}-{sub if sub else '0'}-")], 
                 artikel, 
                 3
             )
             if graad_values:
                 graad = st.selectbox("Graad (optioneel)", options=[''] + graad_values).strip()
 
-        # Create key and search
-        key = f"{artikel}-{lit if lit else '0'}-{sub if sub else '0'}-{graad if graad else '0'}"
+        # key maken en zoeken
+        key = f"{artikel}-{lid if lid else '0'}-{sub if sub else '0'}-{graad if graad else '0'}"
         
         if st.button("Zoek"):
-            # Zoek de resultaten
+            # kijk wa we kunnen vinden
             resultaten = data[data['Key'] == key]
             if not resultaten.empty:
                 st.write("Nieuw artikel:")
                 st.table(resultaten['Nieuw Wetboek van Strafvordering'])
                 
-                # Toon de huidige wettekst
+                # laat de huidige wettekst zien
                 st.write("---")
                 st.write("**Huidige wettekst:**")
                 wettekst = extract_article_text(st.session_state['xml_content'], artikel)
