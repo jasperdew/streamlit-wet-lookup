@@ -7,39 +7,77 @@ from io import StringIO
 # Custom CSS styling
 st.markdown("""
     <style>
+        /* Algemene app styling */
         .stApp {
             background-color: #f8f9fa;
         }
-        .main {
+        
+        /* Container styling */
+        .block-container {
             padding: 2rem;
+            max-width: 1200px;
         }
-        .css-1d391kg {  /* Inputs styling */
+        
+        /* Input velden */
+        .stTextInput > div > div > input {
             background-color: white;
-            border-radius: 5px;
-            padding: 1px;
+            border: 1px solid #ddd;
+            padding: 0.5rem;
+            border-radius: 4px;
         }
-        .stButton>button {
-            background-color: #0066cc;
+        
+        /* Zoek knop */
+        .stButton > button {
+            width: 200px;
+            background-color: #1f77b4;
             color: white;
-            border-radius: 5px;
-            padding: 0.5rem 2rem;
             border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
         }
-        .stButton>button:hover {
-            background-color: #0052a3;
+        .stButton > button:hover {
+            background-color: #145c8e;
         }
-        div[data-testid="stTable"] {
+        
+        /* Tabel styling */
+        .dataframe {
             background-color: white;
+            border-radius: 4px;
             padding: 1rem;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
+        
+        /* Wettekst container */
         .law-text {
             background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin: 10px 0;
+            padding: 1.5rem;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin: 1rem 0;
+            line-height: 1.6;
+        }
+        
+        /* Headers */
+        h1, h2, h3 {
+            color: #1f77b4;
+            margin-bottom: 1rem;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            color: #666;
+            padding: 2rem 0;
+            margin-top: 2rem;
+            border-top: 1px solid #ddd;
+        }
+        
+        /* Warning en error berichten */
+        .stAlert {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -87,11 +125,8 @@ def extract_article_text(xml_content, article_number):
     
     return f"Artikel {article_number} niet gevonden."
 
-# App initialization with custom styling
-st.markdown("""
-    # Transponeringstabel nieuw Wetboek van Strafvordering
-    ---
-""")
+# App initialization
+st.title("Transponeringstabel nieuw Wetboek van Strafvordering")
 
 # Load data
 data_path = "data.csv"
@@ -106,8 +141,12 @@ except Exception as e:
     st.error(f"Fout bij het laden van de XML: {str(e)}")
     st.stop()
 
-# Create columns for input fields
+# Input fields in columns with padding
 st.markdown("### Zoek naar een waarde met de key")
+
+# Voeg wat ruimte toe voor de kolommen
+st.markdown("<div style='padding: 1rem 0;'></div>", unsafe_allow_html=True)
+
 col1, col2 = st.columns(2)
 
 with col1:
@@ -118,17 +157,18 @@ with col2:
     lit = st.text_input("Lit (optioneel)", "").strip()
     graad = st.text_input("Graad (optioneel)", "").strip()
 
+# Centreer de zoekknop
+st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+
 if artikel:
     key = f"{artikel}-{lit if lit else '0'}-{sub if sub else '0'}-{graad if graad else '0'}"
     
     if st.button("Zoek", key="search_button"):
-        # Zoek de resultaten
         resultaten = data[data['Key'] == key]
         if not resultaten.empty:
             st.markdown("### Nieuw artikel")
             st.table(resultaten['Nieuw Wetboek van Strafvordering'])
             
-            # Toon de originele wettekst in een mooie container
             st.markdown("### Originele wettekst")
             wettekst = extract_article_text(st.session_state['xml_content'], artikel)
             st.markdown(f"""
@@ -141,10 +181,11 @@ if artikel:
 else:
     st.error("Vul het artikelnummer in. Dit veld is verplicht.")
 
+st.markdown("</div>", unsafe_allow_html=True)
+
 # Footer
-st.markdown("---")
 st.markdown("""
-    <div style='text-align: center; color: #666; padding: 20px;'>
+    <div class="footer">
         © 2024 Wetboek van Strafvordering Transponeringstabel
     </div>
 """, unsafe_allow_html=True)
