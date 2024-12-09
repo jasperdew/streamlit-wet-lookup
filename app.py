@@ -21,7 +21,7 @@ def extract_article_text(xml_content, article_number):
     for artikel in root.iter('artikel'):
         nr_element = artikel.find('./kop/nr')
         if nr_element is not None and nr_element.text.strip() == article_number:
-            output_lines = [f"Artikel {article_number}"]
+            output_lines = [f"Artikel {article_number}\n"]  # Added extra newline here
             
             for lid in artikel.iter('lid'):
                 lidnr_el = lid.find('lidnr')
@@ -82,10 +82,10 @@ if artikel:
             
             # Toon de originele wettekst
             st.write("---")
-            st.write("**Originele wettekst:**")
+            st.write("**Huidige wettekst:**")
             wettekst = extract_article_text(st.session_state['xml_content'], artikel)
             st.markdown(wettekst)
         else:
-            st.warning("Geen resultaten gevonden voor deze key.")
+            st.warning("Geen resultaten gevonden voor huidige zoekopdracht (de combinatie van Artikel/Lid/Sub/Graad bestaat niet)")
 else:
     st.error("Vul het artikelnummer in. Dit veld is verplicht.")
