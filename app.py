@@ -16,7 +16,7 @@ st.title("Key Lookup Tool")
 # Inputvelden
 st.subheader("Zoek naar een waarde met de key")
 artikel = st.text_input("Artikel (verplicht)", "")
-lit = st.text_input("Lit (optioneel)", "")
+lid = st.text_input("Lit (optioneel)", "")
 sub = st.text_input("Sub (optioneel)", "")
 graad = st.text_input("Graad (optioneel)", "")
 
