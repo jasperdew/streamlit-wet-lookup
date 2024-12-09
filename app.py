@@ -47,17 +47,20 @@ def extract_article_text(xml_content, article_number):
     
     return f"Artikel {article_number} niet gevonden."
 
-def get_available_values(data, column, filters=None):
-    if filters:
-        for key, value in filters.items():
-            if value:
-                data = data[data[key] == value]
+def get_available_values(data, artikel, position):
+    # Filter rows that start with the artikel
+    filtered_data = data[data['Key'].str.startswith(f"{artikel}-")]
     
-    # Split the 'Key' column and get unique values for the specified position
-    values = data['Key'].str.split('-').str[column].unique()
+    if filtered_data.empty:
+        return []
+    
+    # Split all matching keys and get the values at the specified position
+    values = filtered_data['Key'].str.split('-').str[position].unique()
+    
     # Remove '0' values and sort
     values = sorted([v for v in values if v != '0'])
-    return [''] + values if values is not None else ['']
+    
+    return values
 
 # App initialization
 st.title("Transponeringstabel nieuw Wetboek van Strafvordering")
@@ -86,19 +89,29 @@ if artikel:
     matching_keys = data['Key'].str.startswith(f"{artikel}-")
     
     if matching_keys.any():
-        # Get available lit values based on selected artikel
-        lit_options = get_available_values(data, 1, {'Key': lambda x: x.startswith(f"{artikel}-")})
-        lit = st.selectbox("Lit (optioneel)", options=lit_options).strip()
+        # Initialize variables
+        lit = sub = graad = ""
         
-        # Get available sub values based on selected artikel and lit
-        filters = {'Key': lambda x: x.startswith(f"{artikel}-{lit if lit else '0'}-")}
-        sub_options = get_available_values(data, 2, filters)
-        sub = st.selectbox("Sub (optioneel)", options=sub_options).strip()
+        # Get available lit values
+        lit_values = get_available_values(data, artikel, 1)
+        if lit_values:
+            lit = st.selectbox("Lit (optioneel)", options=[''] + lit_values).strip()
         
-        # Get available graad values based on selected artikel, lit, and sub
-        filters = {'Key': lambda x: x.startswith(f"{artikel}-{lit if lit else '0'}-{sub if sub else '0'}-")}
-        graad_options = get_available_values(data, 3, filters)
-        graad = st.selectbox("Graad (optioneel)", options=graad_options).strip()
+        # Get available sub values only if we have a lit value or lit values don't exist
+        if lit or not lit_values:
+            sub_values = get_available_values(data[data['Key'].str.startswith(f"{artikel}-{lit if lit else '0'}-")], artikel, 2)
+            if sub_values:
+                sub = st.selectbox("Sub (optioneel)", options=[''] + sub_values).strip()
+        
+        # Get available graad values only if we have a sub value or sub values don't exist
+        if sub or not (lit_values or sub_values):
+            graad_values = get_available_values(
+                data[data['Key'].str.startswith(f"{artikel}-{lit if lit else '0'}-{sub if sub else '0'}-")], 
+                artikel, 
+                3
+            )
+            if graad_values:
+                graad = st.selectbox("Graad (optioneel)", options=[''] + graad_values).strip()
 
         # Create key and search
         key = f"{artikel}-{lit if lit else '0'}-{sub if sub else '0'}-{graad if graad else '0'}"
