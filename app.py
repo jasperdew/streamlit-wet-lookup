@@ -82,7 +82,7 @@ if artikel:
             
             # Toon de originele wettekst
             st.write("---")
-            st.write("**Originele wettekst:**")
+            st.write("**Originele huidige wettekst:**")
             wettekst = extract_article_text(st.session_state['xml_content'], artikel)
             st.markdown(wettekst)
         else:
