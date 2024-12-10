@@ -7,9 +7,9 @@ from io import StringIO
 @st.cache_data
 def load_data(file_path):
     """
-    Laadt de transponeringstabel vanuit een CSV bestand.
+    Laadt de transponeringstabel vanuit een Excel bestand.
     """
-    return pd.read_csv(file_path, delimiter=';', encoding='ISO-8859-1')
+    return pd.read_excel(file_path)
 
 @st.cache_data
 def load_new_law_text(file_path):
@@ -130,7 +130,7 @@ st.set_page_config(layout="wide")  # Gebruik de volledige breedte
 st.title("Transponeringstabel nieuw Wetboek van Strafvordering")
 
 # Inladen van de benodigde gegevens
-data_path = "data.csv"
+data_path = "data.xlsx"  # Changed from data.csv to data.xlsx
 new_law_path = "Wetboek_Strafvordering_Geformatteerd.xlsx"
 
 try:
