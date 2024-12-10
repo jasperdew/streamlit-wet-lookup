@@ -18,8 +18,9 @@ def load_new_law_text(file_path):
     Maakt een woordenboek van artikelnummers naar wetteksten voor snelle opzoekacties.
     """
     df = pd.read_excel(file_path)
+    # Verwijder 'Artikel ' en strip spaties, inclusief spaties binnen het artikelnummer
     return dict(zip(
-        df['Artikelnummer'].str.replace('Artikel ', '').str.strip(),
+        df['Artikelnummer'].str.replace('Artikel ', '').str.replace(' ', '').str.strip(),
         df.iloc[:, 1]
     ))
 
