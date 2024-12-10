@@ -233,6 +233,8 @@ with col2:
     **Bronnen:**
     - [Transponeringstabel nieuw Wetboek van Strafvordering](https://www.strafrechtketen.nl/documenten/kamerstukken/2023/03/21/transponeringstabel-nieuw-wetboek-van-strafvordering-oud-naar-nieuw)
     - [Voor boek 1-5 is steeds gebruik gemaakt van "Ambtelijke versie wetsvoorstel Wetboek van Strafvordering". Deze konden ik met hetzelfde script omzetten naar een gestructureerd format. Andere boeken kon ik nog geen ambtelijke versie van vinden.](https://www.rijksoverheid.nl/binaries/rijksoverheid/documenten/publicaties/2020/12/11/ambtelijke-versie-juli-2020-wetsvoorstel-wetboek-van-strafvordering-boek-1/Vaststelling+van+het+nieuwe+Wetboek+van+Strafvordering+Boek+1.pdf)
+    
+    **Versie: v1**
     """)
 
 # Voeg wat padding toe aan de onderkant
