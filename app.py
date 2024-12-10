@@ -154,7 +154,7 @@ except Exception as e:
     st.stop()
 
 # Zoekinterface
-st.subheader("Zoek naar een waarde met de key")
+st.subheader("Selecteer een specifiek artikel uit het huidige wetboek van strafvordering")
 
 artikel = st.text_input("Artikel (verplicht)", "").strip()
 
