@@ -101,12 +101,15 @@ def extract_article_numbers(reference_string):
     """
     Haalt de hoofdartikelnummers uit een reeks verwijzingen.
     Bijvoorbeeld: uit '1.2.9, 1, a' wordt '1.2.9' geëxtraheerd.
+    Verwijdert alle spaties uit de artikelnummers.
     """
     references = reference_string.split(';')
     article_numbers = []
     for ref in references:
         main_article = ref.split(',')[0].strip()
         if main_article:
+            # Verwijder alle spaties uit het artikelnummer
+            main_article = main_article.replace(' ', '')
             article_numbers.append(main_article)
     return article_numbers
 
