@@ -4,7 +4,8 @@ echo "\
 [server]\n\
 headless = true\n\
 port = $PORT\n\
-enableCORS = false\n\
+enableCORS = true\n\
+corsAllowedOrigins = *\n\
 enableWebsocketCompression = false\n\
 enableXsrfProtection = false\n\
 \n\
